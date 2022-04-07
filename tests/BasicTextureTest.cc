@@ -149,7 +149,7 @@ void BasicTexture::createShader() {
 }
 
 void BasicTexture::createVertexBuffer() {
-    //float left = -.7f, bottom = -.2f, right = .1f, top = .6f;
+    // float left = -.7f, bottom = -.2f, right = .1f, top = .6f;
     float left         = -1.F;
     float bottom       = -1.F;
     float right        = 1.F;
@@ -208,7 +208,7 @@ void BasicTexture::createTexture() {
     _textureViews[1] = TestBaseI::device->createTexture(viewInfo);
 
     vector<uint8_t> buffer(_textures[0]->getWidth() * _textures[0]->getHeight() * gfx::GFX_FORMAT_INFOS[toNumber(_textures[0]->getFormat())].size);
-    uint8_t *       data = buffer.data();
+    uint8_t        *data = buffer.data();
 
     gfx::BufferTextureCopy region;
     region.texExtent.width  = _textures[0]->getWidth();
@@ -217,6 +217,10 @@ void BasicTexture::createTexture() {
 
     device->copyBuffersToTexture(&data, _textures[0], &region, 1);
 }
+
+gfx::DescriptorSet *globalDescriptor = nullptr;
+gfx::Texture       *view0            = nullptr;
+gfx::Texture       *view1            = nullptr;
 
 void BasicTexture::createPipeline() {
     gfx::DescriptorSetLayoutInfo dslInfo;
@@ -228,14 +232,18 @@ void BasicTexture::createPipeline() {
 
     _descriptorSet = device->createDescriptorSet({_descriptorSetLayout});
 
+    globalDescriptor = _descriptorSet;
+    view0            = _textureViews[0];
+    view1            = _textureViews[1];
+
     gfx::SamplerInfo samplerInfo;
-    auto *           sampler = device->getSampler(samplerInfo);
+    auto            *sampler = device->getSampler(samplerInfo);
 
     _descriptorSet->bindBuffer(0, _uniformBuffer);
     _descriptorSet->bindSampler(1, sampler);
-    _descriptorSet->bindTexture(1, _textures[1]);
+    _descriptorSet->bindTexture(1, _textureViews[1]);
     _descriptorSet->bindSampler(1, sampler, 1);
-    _descriptorSet->bindTexture(1, _textures[0], 1);
+    _descriptorSet->bindTexture(1, _textureViews[0], 1);
     _descriptorSet->update();
 
     gfx::PipelineStateInfo pipelineInfo;
@@ -272,16 +280,43 @@ void BasicTexture::onTick() {
 
     if (static_cast<uint32_t>(_time) > _oldTime) {
         _oldTime = static_cast<uint32_t>(_time);
-        if (_oldTime % 2) {
-            _descriptorSet->bindTexture(1, _textureViews[1]);
-            _descriptorSet->bindTexture(1, _textureViews[0], 1);
+        
+        gfx::TextureViewInfo viewInfo = {};
+        viewInfo.type                 = gfx::TextureType::TEX2D;
+        viewInfo.format               = gfx::Format::RGBA8;
+        viewInfo.baseLevel            = 3;
+        viewInfo.levelCount           = 1;
 
+//        view0->destroy();
+//        view1->destroy();
+
+        if (_oldTime % 2) {
+            viewInfo.baseLevel = 0;
+            viewInfo.texture   = _textures[0];
+            _textureViews[0]   = TestBaseI::device->createTexture(viewInfo);
+            viewInfo.texture   = _textures[1];
+            _textureViews[1]   = TestBaseI::device->createTexture(viewInfo);
         } else {
-            _descriptorSet->bindTexture(1, _textures[1]);
-            _descriptorSet->bindTexture(1, _textures[0], 1);
+            viewInfo.baseLevel = 3;
+            viewInfo.texture   = _textures[0];
+            _textureViews[0]   = TestBaseI::device->createTexture(viewInfo);
+            viewInfo.texture   = _textures[1];
+            _textureViews[1]   = TestBaseI::device->createTexture(viewInfo);
         }
+
+        view0->destroy();
+        view1->destroy();
+
+        _descriptorSet->bindTexture(1, _textureViews[1]);
+        _descriptorSet->bindTexture(1, _textureViews[0], 1);
+
+        view0 = _textureViews[0];
+        view1 = _textureViews[1];
+
         _descriptorSet->update();
     }
+
+    //CC_LOG_INFO("current idx is %d", static_cast<gfx::CCVKDevice *>(device)->gpuDevice()->curBackBufferIndex);
 
     uint generalBarrierIdx = _frameCount ? 1 : 0;
     uint textureBarriers   = _frameCount ? 0 : _textureBarriers.size();

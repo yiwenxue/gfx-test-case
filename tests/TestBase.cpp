@@ -40,28 +40,28 @@ vector<WindowInfo> TestBaseI::windowInfos;
 
 int         TestBaseI::curTestIndex           = -1;
 int         TestBaseI::nextDirection          = 0;
-TestBaseI * TestBaseI::test                   = nullptr;
+TestBaseI  *TestBaseI::test                   = nullptr;
 const bool  TestBaseI::MANUAL_BARRIER         = true;
 const float TestBaseI::NANOSECONDS_PER_SECOND = 1000000000.F;
 
-gfx::Device *    TestBaseI::device     = nullptr;
+gfx::Device     *TestBaseI::device     = nullptr;
 gfx::RenderPass *TestBaseI::renderPass = nullptr;
 
 vector<TestBaseI::createFunc> TestBaseI::tests = {
-    SubpassTest::create,
-    ScriptTest::create,
-    ComputeTest::create,
-    StressTest::create,
-    FrameGraphTest::create,
-    ClearScreen::create,
-    BasicTriangle::create,
-    BlendTest::create,
-    ParticleTest::create,
+// SubpassTest::create,
+// ScriptTest::create,
+// ComputeTest::create,
+// StressTest::create,
+// FrameGraphTest::create,
+// ClearScreen::create,
+// BasicTriangle::create,
+// BlendTest::create,
+// ParticleTest::create,
 // Need to fix lib jpeg on iOS
 #if CC_PLATFORM != CC_PLATFORM_MAC_IOS
-    DepthTexture::create,
+    // DepthTexture::create,
     BasicTexture::create,
-    StencilTest::create,
+// StencilTest::create,
 #endif // CC_PLATFORM != CC_PLATFORM_MAC_IOS
 };
 
@@ -99,7 +99,7 @@ TestBaseI::TestBaseI() {
         device = gfx::DeviceManager::create(deviceInfo);
 
         for (size_t i = 0; i < windowInfos.size(); ++i) {
-            const auto &       info = windowInfos[i];
+            const auto        &info = windowInfos[i];
             gfx::SwapchainInfo swapchainInfo;
             swapchainInfo.windowHandle = info.windowHandle;
             swapchainInfo.width        = info.screen.width;
@@ -168,7 +168,7 @@ void TestBaseI::nextTest(bool backward) {
 
 void TestBaseI::toggleMultithread() {
     static bool multithreaded = true;
-    auto *      deviceAgent   = gfx::DeviceAgent::getInstance();
+    auto       *deviceAgent   = gfx::DeviceAgent::getInstance();
     if (deviceAgent) {
         multithreaded = !multithreaded;
         deviceAgent->setMultithreaded(multithreaded);
@@ -219,7 +219,7 @@ void TestBaseI::scriptEngineGC() {
 unsigned char *TestBaseI::rgb2rgba(Image *img) {
     int                  size    = img->getWidth() * img->getHeight();
     const unsigned char *srcData = img->getData();
-    auto *               dstData = new unsigned char[size * 4];
+    auto                *dstData = new unsigned char[size * 4];
     for (int i = 0; i < size; i++) {
         dstData[i * 4]     = srcData[i * 3];
         dstData[i * 4 + 1] = srcData[i * 3 + 1];
@@ -289,7 +289,7 @@ void TestBaseI::createOrthographic(float left, float right, float bottom, float 
     float                 minZ         = device->getCapabilities().clipSpaceMinZ;
     float                 signY        = device->getCapabilities().clipSpaceSignY;
     gfx::SurfaceTransform orientation  = swapchain->getSurfaceTransform();
-    const float *         preTransform = PRE_TRANSFORMS[static_cast<uint>(orientation)];
+    const float          *preTransform = PRE_TRANSFORMS[static_cast<uint>(orientation)];
 
     memset(dst->m, 0, 16 * sizeof(float));
 
@@ -318,7 +318,7 @@ void TestBaseI::createPerspective(float fov, float aspect, float zNear, float zF
     float                 minZ         = device->getCapabilities().clipSpaceMinZ;
     float                 signY        = device->getCapabilities().clipSpaceSignY;
     gfx::SurfaceTransform orientation  = swapchain->getSurfaceTransform();
-    const float *         preTransform = PRE_TRANSFORMS[static_cast<uint>(orientation)];
+    const float          *preTransform = PRE_TRANSFORMS[static_cast<uint>(orientation)];
 
     memset(dst->m, 0, 16 * sizeof(float));
 
